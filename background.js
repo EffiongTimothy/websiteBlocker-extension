@@ -4,79 +4,71 @@ let endTimer = null;
 let timerInterval = null;
 
 function cancelRequest(details) {
-if (details.url.includes(blockedWebsite)) {
-return { cancel: true };
-}
+  if (details.url.includes(blockedWebsite)) {
+    return { cancel: true };
+  }
 }
 
 function blockWebsite(tabId) {
-chrome.tabs.sendMessage(tabId, { action: 'block' });
+  chrome.tabs.sendMessage(tabId, { action: "block" });
+  console.log("tabId-->", tabId);
 }
 
 function unblockWebsite(tabId) {
-chrome.tabs.sendMessage(tabId, { action: 'unblock' });
+  chrome.tabs.sendMessage(tabId, { action: "unblock" });
+  console.log("tabId-->", tabId);
 }
 
-function timer(endTimer, startTimer, blockedWebsite) {
-const currentTime = new Date();
-const remainingTime = endTimer - currentTime;
-console.log("Remaining Time:", remainingTime);
-
-if (remainingTime >= 0) {
-const seconds = Math.floor(remainingTime / 1000);
-console.log(`
-Website ${blockedWebsite} is blocked. Countdown: ${seconds} seconds`
-);
-
-if (!blockedWebsite) {
-  blockWebsite(tabId);
-}
-
-timerInterval = setInterval(() => {
-  const updatedTime = endTimer - new Date();
-  const updatedSeconds = Math.floor(updatedTime / 1000); // Convert updatedTime to seconds
-  console.log("Remaining Time:", updatedSeconds);
-
-  if (updatedTime <= 0) {
-    clearInterval(timerInterval);
-    console.log(blockedWebsite, "is not blocked");
-    unblockWebsite(tabId);
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "activate") {
+    const { domainName, start, end } = message;
+    console.log("Received data:", domainName, start, end);
+    activate(domainName, start, end, sender);
   }
-}, 1000);
-} else {
-clearInterval(timerInterval);
-console.log(blockedWebsite, "is not blocked");
-}
-}
-
-
-chrome.runtime.onInstalled.addListener(() => {
-  chrome.runtime.onMessage.addListener((message) => {
-    if (message.action === 'activate') {
-      const { domainName, start, end } = message;
-      console.log('Received data:', domainName, start, end);
-      activate(domainName, start, end);
-    }
-  });
 });
 
-function activate(domainName, start, end) {
-  blockedWebsite = domainName;
-  startTimer = new Date(start);
-  endTimer = new Date(end);
-  console.log("activate data-->", startTimer, endTimer);
+function activate(domainName, start, end, sender) {
+  const startTime = new Date(start);
+  const endTime = new Date(end);
 
-  // Get the ID of the active tab
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs.length > 0) {
-      tabId = tabs[0].id;
+  const currentTime = new Date();
+  const remainingTime = endTime - currentTime;
 
-      // Delay the message by a few seconds
-      setTimeout(() => {
-        timer(endTimer, startTimer, blockedWebsite);
-      }, 3000);
-    } else {
-      console.error('No active tabs found.');
+  console.log("Remaining Time:", remainingTime);
+  const seconds = Math.floor(remainingTime / 1000);
+  if (seconds >= 0) {
+    const seconds = Math.floor(remainingTime / 1000);
+    if (startTime === currentTime) {
+      console.log(`
+    Website ${domainName} is blocked. Countdown: ${seconds} seconds`);
+      chrome.runtime.sendMessage({ action: "block" });
     }
-  });
+    timerInterval = setInterval(() => {
+      const updatedTime = endTime - new Date();
+      const updatedSeconds = Math.floor(updatedTime / 1000); // Convert updatedTime to seconds
+      console.log("Remaining Time:", updatedSeconds);
+
+      if (updatedTime <= 0) {
+        clearInterval(timerInterval);
+        console.log(domainName, "is not blocked");
+        // if (sender && sender.tab && sender.tab.id) {
+        //   unblockWebsite(sender.tab.id);
+        // }
+      }
+    }, 1000);
+  } else {
+    clearInterval(timerInterval);
+    chrome.runtime.sendMessage({ action: "unblock" });
+    console.log(domainName, "is not blocked");
+  }
 }
+// if (currentTime >= startTime && currentTime <= endTime) {
+//   // Website is within the blocking time interval
+
+//   console.log(`Website ${domainName} is blocked.`);
+// } else {
+//   // Website is outside the blocking time interval
+
+//   console.log(`Website ${domainName} is not blocked.`);
+// }
+// }
