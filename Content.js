@@ -15,12 +15,12 @@ const generateSTYLES = () => {
     margin: 100px auto;
   }
   ._404 {
-    font-size: 220px;
+    font-size: 120px;
     position: relative;
     display: inline-block;
     z-index: 2;
-    height: 250px;
-    letter-spacing: 15px;
+    height: 150px;
+    letter-spacing: 10px;
   }
   ._1 {
     text-align: center;
@@ -243,7 +243,7 @@ const generateHTML = (pageName) => {
       <div class="cloud x5"></div>
   </div>
   <div class='c'>
-      <div class='_404'>404</div>
+      <div class='_404'>baba you no wan help yourself</div>
       <hr>
       <div class='_1'>GET BACK TO WORK</div>
       <div class='_2'>STUDYING > ${pageName}</div>

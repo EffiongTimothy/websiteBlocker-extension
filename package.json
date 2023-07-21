@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "chrome": "^0.1.0",
+    "lottie-web": "^5.12.2"
+  }
+}
